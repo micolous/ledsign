@@ -1,6 +1,6 @@
 from ledsign2 import *
 
-sign = LEDSign('/dev/ttyS0')
+sign = LEDSign('/dev/ttyUSB0')
 
 sign.begin_message()
 sign.set_clock()
@@ -8,7 +8,7 @@ sign.set_clock()
 sign.begin_file(1)
 sign.add_run_mode(EFFECT_IMMEDIATE)
 
-sign.add_special(SPECIAL_TIME)
+sign.add_text("<Firstyear> The Game")
 
 sign.end_file()
 

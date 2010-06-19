@@ -8,7 +8,7 @@ sign.set_clock()
 sign.begin_file(1)
 sign.add_run_mode(EFFECT_IMMEDIATE)
 
-sign.add_text("<Firstyear> The Game")
+sign.add_text("This is a test")
 
 sign.end_file()
 

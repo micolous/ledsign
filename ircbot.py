@@ -5,6 +5,7 @@ def write_to_sign(msg):
   sign = LEDSign('/dev/ttyUSB0')
   sign.begin_message()
   sign.begin_file(1)
+  sign.add_run_mode(EFFECT_IMMEDIATE)
   msgl = len(msg)
   msg = msg.replace("\x07","")
   if msgl > len(msg):

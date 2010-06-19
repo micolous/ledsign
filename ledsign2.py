@@ -185,7 +185,7 @@ class LEDSign:
 		for x in msg:
 			y = ord(x)
 			if y < 32 or y > 237:
-				raise Exception, "You shouldn't be using the character %s." % x
+				raise Exception, "You shouldn't be using the character %s (#%s)." % (x, ord(x))
 		self.s.write(msg)
 	
 	def add_special(self, special):

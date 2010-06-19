@@ -1,14 +1,20 @@
-import irclib
+import irclib, traceback
 from ledsign2 import *
 
 def write_to_sign(msg):
-  sign = LEDSign('/dev/ttyS0')
+  sign = LEDSign('/dev/ttyUSB0')
   sign.begin_message()
   sign.begin_file(1)
+  msgl = len(msg)
+  msg = msg.replace("\x07","")
+  if msgl > len(msg):
+    # beep!
+    sign.add_special(SOUND_BEEP_1)
   try:
     sign.add_text(msg)
   except:
-    print "exception caught"
+    print "exception caught trying to send '%s'" % msg
+    traceback.print_exc()
     sign.add_text("exception caught")
   sign.end_file()
   sign.end_message()
@@ -35,6 +41,6 @@ irc.add_global_handler('quit', handle_quit)
   
 
 server = irc.server()
-server.connect("marvin", 6667, "signbot")
+server.connect("irc.micolous.id.au", 6667, "signbot")
 server.join("#streetgeek")
 irc.process_forever()

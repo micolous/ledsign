@@ -6,11 +6,6 @@ def write_to_sign(msg):
   sign.begin_message()
   sign.begin_file(1)
   sign.add_run_mode(EFFECT_IMMEDIATE)
-  msgl = len(msg)
-  msg = msg.replace("\x07","")
-  if msgl > len(msg):
-    # beep!
-    sign.add_special(SOUND_BEEP_1)
   try:
     print msg
     sign.add_text(msg)
@@ -24,7 +19,10 @@ def write_to_sign(msg):
 def handle_pubmsg(connection, event):
   nick = event.source().partition("!")[0]
   msg = event.arguments()[0]
-  write_to_sign("<%s> %s" % (nick, msg))
+  if '\x07' in msg:
+    write_to_sign("%s is an idiot" % nick)
+  else:
+    write_to_sign("<%s> %s" % (nick, msg))
 
 def handle_action(connection, event):
   nick = event.source().partition("!")[0]

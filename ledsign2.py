@@ -94,7 +94,21 @@ FONT_3x7 = '\xAC'
 
 COLOUR_BRIGHT_RED = '\xB0'
 COLOUR_DIM_RED = '\xB1'
-# other colours, require a colour display which i don't have
+# additional colours for M500N-7X80RG2 (Red/Green 2-LED version)
+# thanks to Martin Hill <martin at eshock.com>
+COLOUR_AMBER = '\xB2'
+COLOUR_YELLOW = '\xB3'
+COLOUR_DIM_ORANGE = '\xB4'
+COLOUR_BRIGHT_ORANGE = '\xB5'
+COLOUR_DIM_GREEN = '\xB6'
+COLOUR_BRIGHT_GREEN = '\xB7'
+COLOUR_RAINBOW1 = '\xB8'
+COLOUR_RAINBOW2 = '\xBA'
+COLOUR_RAINBOW3 = '\xBB'
+COLOUR_RAINBOW4 = '\xBC'
+COLOUR_RAINBOW5 = '\xBD'
+COLOUR_RAINBOW6 = '\xBE'
+COLOUR_RAINBOW7 = '\xBF'
 
 # fastest speed is 1, slowest is 8
 SPEED_1 = '\xC0'

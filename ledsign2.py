@@ -232,9 +232,11 @@ class LEDSign:
 		self.message_open = False
 
 
-	def set_clock(self, n = datetime.now(), hour24=True):
+	def set_clock(self, n = None, hour24=True):
 		if self.file_id != None:
 			raise Exception, "Cannot set clock while a file is open"
+		if n == None:
+			n = datetime.now()
 		if hour24:
 			hour24 = "\x00"
 		else:
@@ -266,4 +268,8 @@ class LEDSign:
 	
 	def playlist(self, page_order):
 		pass
+	
+	def close(self):
+		self.s.close()
+		
 		

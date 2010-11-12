@@ -118,7 +118,9 @@ class LEDSign:
 		elif level == 4:
 			self.write("<BA>")
 
-	def set_clock(self, n = datetime.now()):
+	def set_clock(self, n = None):
+		if n == None:
+			n = datetime.now()
 		self.write(("<SC>" + ("%02d"*7)) % (n.year%100, n.isoweekday(), n.month, n.day, n.hour, n.minute, n.second))
 
 	def __validate_pageid(self, pageid):

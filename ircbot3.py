@@ -27,7 +27,7 @@ def write_to_sign(msg):
 	
 	try:
 		song = get_winamp()
-		self.end_frame()
+		sign.end_frame()
 		sign.add_text('         ' + song)
 	except:
 		print "error getting winamp httpq"

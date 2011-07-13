@@ -1,0 +1,104 @@
+Dirk Ziegelmeiner's Protocol description, from:
+
+http://www.ziegelmeier.net/extreme-feedback-device
+
+
+Example telegram:
+<ID00><BE>05<E>
+<ID00><L1><PA><FL><Ma><WC><FD><AC><CS>eXtreme Feedback11<E>
+<ID00><BF>06<E>
+
+Serial Parms: 9600 8N1
+
+Frame:
+<*DISPLAYID*><*COMMAND*>*ARGS**CHKSUM*<E>
+
+*CHKSUM*:    2 Chars Hex XOR without <*DISPLAYID*> and <E>
+*DISPLAYID*: ID + Number: ID00
+
+Commands:
+Begin TextLines: BE
+End TextLines:   BF
+Text Line1:      L1 Args: Textargs
+Set Clock:       SC Args: YY??MMDDHHMMSS
+Brightness 100%: BA
+Brightness  75%: BB
+Brightness  50%: BC
+Brightness  25%: BD
+Link Pages:      TA Args: 00010100009912302359*PAGELIST*
+Run Page:        RP + Page
+
+Special case Text: Command BeginTextLines, Command TextLine, Command EndTextLines
+
+Textargs:
+<*PAGE*><*OPENEFFECT*><*MOVESPEED*><*DISPLAYTIME*><*CLOSINGEFFECT*>*TEXTBODY*
+
+*PAGE*:     P + PageId ([A-Z]): z.B. PA
+
+*OPENEFFECT* (+: also *CLOSINGEFFECT*)
++Immediate: FA
++Xopen:     FB
++CurtainUp: FC
++CurtainDn: FD
++ScrollL:   FE
++ScrollR:   FF
++Vopen:     FG
++VClose:    FH
++ScrollU:   FI
++ScrollD:   FJ
++Hold:      FK
+ Snow:      FL
+ Twinkle:   FM
+ BlockMove: FN
+ Random:    FP
+
+DISPLAYTIME:
+0,5: WA
+1:   WB
+2:   WC
+...
+25:  WZ
+
+MOVESPEED:
+0: Mq
+1: Ma
+2: MQ
+3: MA
+
+*TEXTBODY*: Text with Text Modifiers
+
+Text Modifiers:
+Font4x7: <AC>
+Font5x7: <AA>
+Font6x7: <AB>
+Red:     <CA>
+Green:   <CD>
+Orange:  <CH>
+IRed:    <CL>
+IGreen:  <CM>
+IOrange: <CN>
+RoG:     <CP>
+GoR:     <CQ>
+RYG:     <CR>
+Rainbow: <CS>
+Date:    <KD>
+Time:    <KT>
+Bell0.5: <BA>
+Bell1:   <BB>
+Bell1.5: <BC>
+Bell2:   <BD>
+
+Checksum (C# code):
+public string CreateCommand(string commandBody)
+{
+	string result = "<ID" + _deviceId + ">" + commandBody;
+
+	byte checksum = 0;
+	foreach(char c in commandBody)
+	{
+		checksum = (byte)(checksum ^ (byte)c);
+	}
+	result += checksum.ToString("X02");
+			
+	return result + "<E>";
+}

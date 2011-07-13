@@ -147,6 +147,7 @@ PAUSE_6 = '\xCD'
 PAUSE_7 = '\xCE'
 PAUSE_8 = '\xCF'
 
+# TODO: implement programming custom graphics
 GRAPHIC_CUSTOM_1 =  '\xD0'
 GRAPHIC_CUSTOM_2 =  '\xD1'
 GRAPHIC_CUSTOM_3 =  '\xD2'
@@ -155,14 +156,18 @@ GRAPHIC_CUSTOM_5 =  '\xD4'
 GRAPHIC_CUSTOM_6 =  '\xD5'
 GRAPHIC_CUSTOM_7 =  '\xD6'
 GRAPHIC_CUSTOM_8 =  '\xD7'
-GRAPHIC_TRAINS =    '\xD8'
+# Multiple interpretations of the graphics here.
+# Trains, teacups, beach and mouse is what I thought they were.
+# I've updated it so it has the "official names" of these graphics from the
+# manual as well, but not break the API.
+GRAPHIC_CITY =      GRAPHIC_TRAINS =    '\xD8'
 GRAPHIC_CARS =      '\xD9'
-GRAPHIC_TEACUPS =   '\xDA'
+GRAPHIC_VESSEL =    GRAPHIC_TEACUPS =   '\xDA'
 GRAPHIC_TELEPHONE = '\xDB'
-GRAPHIC_BEACH =     '\xDC'
+GRAPHIC_NATURE =    GRAPHIC_BEACH =     '\xDC'
 GRAPHIC_SHIP =      '\xDD'
-#GRAPHIC_ =         '\xDE' # not sure what this is supposed to be
-GRAPHIC_MOUSE =     '\xDF'
+GRAPHIC_SWIM =      '\xDE'
+GRAPHIC_CAT =       GRAPHIC_MOUSE =     '\xDF'
 
 SOUND_BEEP_3 = '\xE0'
 SOUND_BEEP_5 = '\xE1'

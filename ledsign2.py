@@ -3,8 +3,10 @@
 Driver for the Bestlink Optoelectronics M500N-7X80RG2
 Copyright 2010 Michael Farrell <http://micolous.id.au/>
 
-Requires pyserial library in order to interface.
+This sign is also sometimes known as XC-0198 (as sold by Jaycar and Procon 
+Technology in AU).
 
+Requires pyserial library in order to interface.
 
 This library is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by

@@ -68,5 +68,5 @@ if __name__ == '__main__':
 
 	server = irc.server()
 	server.connect("localhost", 6667, "signbot")
-	server.join("#blackhats")
+	server.join("#test")
 	irc.process_forever()

@@ -47,6 +47,6 @@ irc.add_global_handler('quit', handle_quit)
 irc.add_global_handler('action', handle_action)
 
 server = irc.server()
-server.connect("irc.micolous.id.au", 6667, "signbot")
-server.join("#streetgeek")
+server.connect("localhost", 6667, "signbot")
+server.join("#test")
 irc.process_forever()

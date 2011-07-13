@@ -1,0 +1,49 @@
+Pinout for M500N-7X80RG2
+Written by Michael Farrell, with help from Stefano Mollo.
+
+Note: make sure you're using a proportional (fixed-width, monospace) font when viewing this document.  Otherwise the diagrams will not be displayed correctly.
+
+Power: 5V DC 1A positive tip   - ---( o--- +
+
+RJ11 on SIGN                       PC
+
+Pin 1         : NC
+Pin 2 (BLACK) : TXD   ---->   RXD :Pin 2
+Pin 3 (RED)   : RXD   <----   TXD :Pin 3
+Pin 4 (GREEN) : GND   -----   GND :Pin 5
+Pin 5 (YELLOW): -5V   NC
+Pin 6         : NC
+
+
+Plug diagram, clip on bottom.
+       _______________,
+      /              /|
+     /--------------+,|
+     |            --|,||  -- Pin 1 (NC)
+=====| +--+   BK  ==|,||  -- Pin 2 (TXD)
+=====| |##|   RD  ==|,||  -- Pin 3 (RXD)
+=====| |##|   GN  ==|,|   -- Pin 4 (GND)
+=====| +--+   YW  ==|,|   -- Pin 5 (-5v)
+     |            --|/'   -- Pin 6 (NC)
+     +--------------+
+
+
+Socket on sign:
+
+       +-----+
+       |     |
+  +----+     +----+
+  |               |
+  |               |
+  |    | | | |    |
+  |  " " " " " "  |
+  +---------------+
+  
+     6 5 4 3 2 1
+     
+     N - G R T N
+     C 5 N X X C
+       v D D D
+
+
+You can attach multiple signs in parallel by using standard RJ11 double-adapters.  Be aware that some cables and adapters only connect two of the six pins.

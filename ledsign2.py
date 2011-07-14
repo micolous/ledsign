@@ -184,28 +184,60 @@ class LEDSign:
 	def write(self, msg):
 		self.s.write("%s\xFF" % (msg,))
 
-	def begin_message(self, sign=range(1,129), reset=False):
+	def begin_message(self, sign=range(0,128), reset=False):
 		"""Begins a message for a sign.  defaults to all signs."""
 		if self.message_open:
 			raise Exception, "A message is already open"
 			
-		for x in sign:
-			if x < 1 or x > 128:
-				raise Exception, "cannot send to sign ID outside of range 1-128, you sent to sign %s" % x
-				
-		# this is a special thing, doesn't have the \xFF terminator
-		# start programming the sign, do not reset memory
-		self.s.write("\x00\xFF\xFF")
-		if reset:
-			self.s.write("\x01")
-		else:
-			self.s.write("\x00")
 		
-		# data is for sign list
-		self.s.write("\x0B")
-		for x in sign:
-			self.s.write(chr(x))
-		self.s.write('\xFF')
+		if len(sign) == 1:
+			sign = sign[0]
+		
+		if type(sign) == int or type(sign) == long:
+			# we're only programming a single sign.
+			# we can optimise!
+			if sign < 0 or sign > 127:
+				raise Exception, "cannot send to sign ID outside of range 0-127, you sent to sign %s" % x
+			
+			# TODO: check whether this should be little or big endian properly.
+			# the manual isn't really clear on this.  so lets take a stab in the dark.
+			
+			self.s.write("\x00" + chr(sign) + chr(sign))
+			
+			if reset:
+				self.s.write("\x01")
+			else:
+				self.s.write("\x00")
+			
+			# we're done...
+			
+		else:
+			# this is a list with multiple members:
+			for x in sign:
+				if x < 0 or x > 127:
+					raise Exception, "cannot send to sign ID outside of range 0-127, you sent to sign %s" % x
+					
+			
+			# this is a special thing, doesn't have the \xFF terminator
+			# start programming the sign, do not reset memory
+			self.s.write("\x00\xFF\xFF")
+			if reset:
+				self.s.write("\x01")
+			else:
+				self.s.write("\x00")
+		
+		
+			# data is for sign list
+			self.s.write("\x0B")
+			
+			if sign == range(0,128):
+				# we're sending data to everyone.
+				# TODO: test that this actually works
+				self.s.write('\xFF')
+			else:
+				for x in sign:
+					self.s.write(chr(x))
+			self.s.write('\xFF')
 		
 		
 		self.message_open = True

@@ -190,19 +190,23 @@ class CPower1200(object):
 			
 			
 	
-	def send_window(self, window, x, y, width, height):
+	def send_window(self, *windows):
 		# TODO: protocol supports sending multiple window definition at once.
 		# Make a way to expose this in the API.
 		
+		# arguments are dicts with the following keys:
+		#     x: x-position of window
+		#     y: y-position of window
+		#     w: width of window
+		#     h: height of window
+		#
+		# arguments are indicated in pixels.
 		
-		
-		if not 0 <= window <= 7:
-			raise ValueError, "invalid window (must be 0 - 7)"
-		
-		# This call is 1-indexed window ID rather than 0-indexed.
-		window += 1
-		
-		packet = pack('<BBHHHH', CC_DIVISION, window, x, y, width, height)
+		# HERE BE DRAGONS: This function call is BIG ENDIAN.
+		# All the others are LITTLE ENDIAN.  Beware.
+		packet = pack('>BB', CC_DIVISION, len(windows))
+		for window in windows:
+			packet += pack('>HHHH', window['x'], window['y'], window['w'], window['h'])
 		
 		self._write(packet)
 	
@@ -283,16 +287,19 @@ if __name__ == '__main__':
 	
 	s = CPower1200(argv[1])
 	#s.reset()
-	s.exit_show()
+	#s.exit_show()
+	
+	# define two windows, one at the top and one at the bottom.
+	s.send_window(dict(x=0, y=0, h=8, w=64), dict(x=0, y=8, h=8, w=64))
 	
 	#s.send_window(1, 0, 8, 64, 8)
 	txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
-	#s.send_text(0, txt, EFFECT_NONE)
+	s.send_text(0, txt)
 	#s.send_static_text(0, 'Hello World!')
 	#img = Image.open('test.png')
 	#s.send_image(0, img)
 	
-	s.send_clock(0, calendar=CALENDAR_CHINESE)
+	s.send_clock(1, calendar=CALENDAR_CHINESE, multiline=False)
 	s.save()
 	
 	

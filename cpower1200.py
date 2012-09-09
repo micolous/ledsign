@@ -79,6 +79,11 @@ IMAGE_SIMPLE = 4
 SAVE_SAVE = 0
 SAVE_RESET = 1
 
+CALENDAR_GREGORIAN = 0
+CALENDAR_LUNAR = 1
+CALENDAR_CHINESE = 2
+CALENDAR_LUNAR_SOLAR = 3
+
 class CPower1200(object):
 	"""Implementation of the C-Power 1200 protocol"""
 	
@@ -220,6 +225,39 @@ class CPower1200(object):
 		
 		# FIXME: doesn't work.
 		self._write(packet)
+	
+	def send_clock(self, window, stay_time=5000, calendar=CALENDAR_GREGORIAN, hour_24=True, year_4=True, multiline=True, display_year=True, display_month=True, display_day=True, display_hour=True, display_minute=True, display_second=True, display_week=False, display_pointer=False, font_size=0, red=255, green=255, blue=255, text=''):
+		# (so many parameters)
+		
+		# pack in the format
+		format = 0
+		format |= 1 if hour_24 else 0
+		format |= 2 if not year_4 else 0
+		format |= 4 if multiline else 0
+		
+		# pack the display content
+		content = 0
+		content |= 1 if display_year else 0
+		content |= 2 if display_month else 0
+		content |= 4 if display_day else 0
+		content |= 8 if display_hour else 0
+		content |= 16 if display_minute else 0
+		content |= 32 if display_second else 0
+		content |= 64 if display_week else 0
+		content |= 128 if display_pointer else 0
+		
+		# validate font size
+		if not (0 <= font_size <= 7):
+			raise ValueError, "font size out of range (0 - 7)"
+			
+		if not 0 <= window <= 7:
+			raise ValueError, "invalid window (must be 0 - 7)"
+			
+		packet = pack('<BBHBBBBBBB',
+			CC_CLOCK, window, stay_time, calendar,
+			format, content, font_size, red, green, blue) + text + '\0'
+		
+		self._write(packet)
 			
 		
 	
@@ -249,11 +287,12 @@ if __name__ == '__main__':
 	
 	#s.send_window(1, 0, 8, 64, 8)
 	txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
-	s.send_text(0, txt, EFFECT_NONE)
+	#s.send_text(0, txt, EFFECT_NONE)
 	#s.send_static_text(0, 'Hello World!')
 	#img = Image.open('test.png')
 	#s.send_image(0, img)
 	
+	s.send_clock(0, calendar=CALENDAR_CHINESE)
 	s.save()
 	
 	

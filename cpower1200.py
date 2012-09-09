@@ -87,12 +87,44 @@ CALENDAR_LUNAR_SOLAR = 3
 class CPower1200(object):
 	"""Implementation of the C-Power 1200 protocol"""
 	
-	def __init__(self, port):
+	def __init__(self, port, queue=False):
 		self.s = serial.Serial(port, 115200)
 		self.file_id = None
 		self.message_open = False
 		print "opening %s" % self.s.portstr
-
+		self.queue = bool(queue)
+		self._queued_packets = []
+	
+	def begin_queue(self):
+		self.queue = True
+		self._queued_packets = []
+		
+	def flush_queue(self, unit_id=0xFF, confirmation=False):
+		if not self.queue:
+			raise AttributeError, "Cannot flush queue as it is not running in queue mode!"
+		
+		# FIXME: Queuing does not work correctly.
+		
+		# grab the current queue and clear it out.
+		queued_packets = list(self._queued_packets)
+		self._queued_packets = []
+		
+		# start processing commands.
+		
+		for i, packet_data in enumerate(queued_packets):
+			body = pack('<BBBBBHBB', 
+				PACKET_TYPE, CARD_TYPE, unit_id,
+				PROTOCOL_CODE, confirmation, len(packet_data),
+				i, # packet number
+				len(queued_packets) - 1) # total packets - 1
+			body += packet_data
+			checksum = self.checksum(body)
+			msg = "\xA5%s\xAE" % self._escape_data(body + checksum)
+			print repr(msg)
+			self.s.write(msg)
+			self.s.flush()
+		
+	
 	def _write(self, packet_data, unit_id=0xFF, confirmation=False):
 		# start code    A5
 		# packet type   68
@@ -109,10 +141,14 @@ class CPower1200(object):
 		
 		if len(packet_data) > 0xFFFF:
 			raise ValueError, 'Packet too long, packet fragmentation not yet implemented!'
-			
+		
 		if not (0 <= unit_id <= 255):
 			raise ValueError, 'Unit ID out of range (0 - 255)'
 		
+		if self.queue:
+			self._queued_packets.append(packet_data)
+			return
+			
 		confirmation = 0x01 if confirmation else 0x00
 		body = pack('<BBBBBHBB', 
 			PACKET_TYPE, CARD_TYPE, unit_id,
@@ -124,12 +160,12 @@ class CPower1200(object):
 		checksum = self.checksum(body)
 		msg = self._escape_data(body + checksum)
 		
-		print '%r' % msg
+		#print '%r' % msg
 		self.s.write("\xA5%s\xAE" % (msg,))
 		
 		# before another message can be sent, you need to wait a moment
 		self.s.flush()
-		sleep(1)
+		sleep(.1)
 	
 	def _escape_data(self, input):
 		return input.replace('\xAA', '\xAA\x0A').replace('\xAE', '\xAA\0x0E').replace('\xA5', '\xAA\x05')
@@ -170,7 +206,7 @@ class CPower1200(object):
 		if not 0 <= window <= 7:
 			raise ValueError, "invalid window (must be 0 - 7)"
 		
-		packet = pack('<BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text
+		packet = pack('<BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + '\0\0\0'
 		
 		self._write(packet)
 	
@@ -286,6 +322,7 @@ if __name__ == '__main__':
 	import Image
 	
 	s = CPower1200(argv[1])
+	#s.begin_queue()
 	#s.reset()
 	#s.exit_show()
 	
@@ -299,7 +336,8 @@ if __name__ == '__main__':
 	#img = Image.open('test.png')
 	#s.send_image(0, img)
 	
-	s.send_clock(1, calendar=CALENDAR_CHINESE, multiline=False)
-	s.save()
+	s.send_clock(1, calendar=CALENDAR_GREGORIAN, multiline=False)
 	
+	#s.flush_queue()
+	s.save()
 	

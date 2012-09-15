@@ -1,0 +1,26 @@
+Clock data
+
+A5 68 32 01
+47 == protocol ID
+01 == request confirmation?
+00 / 01 == from PC / from Sign
+
+Packet 1: 2012-09-15 19:39:59  3B 27 13 06 0F 09 0C 00
+Packet 2: 2012-09-15 20:16:12  0C 10 14 06 0F 09 0C 00
+Packet 3: 2012-09-15 20:35:33  21 23 14 06 0F 09 0C 00
+
+XX = seconds
+XX = minutes
+XX = hours
+
+XX = day of week, saturday == 6
+XX = day of month
+XX = month
+XX = year, two digits
+
+last three digits:
+3D 01 == checksum?
+AE == end message
+
+
+sign responds with message of seconds and minutes.

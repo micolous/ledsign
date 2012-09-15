@@ -70,6 +70,7 @@ WHITE = 7
 PACKET_TYPE = 0x68
 CARD_TYPE = 0x32
 PROTOCOL_CODE = 0x7B
+CLOCK_PROTOCOL_CODE = 0x47
 
 IMAGE_GIF = 1
 IMAGE_GIF_REF = 2
@@ -125,12 +126,12 @@ class CPower1200(object):
 			self.s.flush()
 		
 	
-	def _write(self, packet_data, unit_id=0xFF, confirmation=False):
+	def _write(self, packet_data, unit_id=0xFF, confirmation=False, protocol_code=PROTOCOL_CODE):
 		# start code    A5
 		# packet type   68
 		# card type     32
 		# card ID       XX   or FF == all units
-		# protocol code 7B
+		# protocol code 7B    (or 47 for clock??)
 		# confirmation  00 / 01
 		# packet length XX XX (uint16 le)
 		# packet number XX (uint8)
@@ -150,22 +151,54 @@ class CPower1200(object):
 			return
 			
 		confirmation = 0x01 if confirmation else 0x00
-		body = pack('<BBBBBHBB', 
+		body = pack('<BBBBB', 
 			PACKET_TYPE, CARD_TYPE, unit_id,
-			PROTOCOL_CODE, confirmation, len(packet_data),
-			0, # packet number
-			0) # total packets - 1
+			protocol_code, confirmation)
+		
+		if protocol_code == PROTOCOL_CODE:
+			# clock packets don't use this.
+			body += pack('<HBB',
+				len(packet_data),
+				0, # packet number
+				0) # total packets - 1
+		elif protocol_code == CLOCK_PROTOCOL_CODE:
+			body += pack('<B',
+				0) # 0 == from PC, 1 == from sign
 		
 		body += packet_data
 		checksum = self.checksum(body)
 		msg = self._escape_data(body + checksum)
 		
 		#print '%r' % msg
+		for c in msg:
+			print '%02x' % ord(c),
+		print ''
 		self.s.write("\xA5%s\xAE" % (msg,))
 		
 		# before another message can be sent, you need to wait a moment
 		self.s.flush()
 		sleep(.1)
+	
+	def set_clock(self, new_clock=None):
+		# if not specified, value is assumed to be "now"
+		# not documented officially!!
+		
+		if new_clock == None:
+			new_clock = datetime.now()
+			
+		packet = pack('>BBBBBBBB',
+			new_clock.second,
+			new_clock.minute,
+			new_clock.hour,
+			new_clock.isoweekday(),
+			new_clock.day,
+			new_clock.month,
+			new_clock.year - 2000,
+			0) # unknown
+			
+		self._write(packet, protocol_code=CLOCK_PROTOCOL_CODE)
+		
+		
 	
 	def _escape_data(self, input):
 		return input.replace('\xAA', '\xAA\x0A').replace('\xAE', '\xAA\0x0E').replace('\xA5', '\xAA\x05')
@@ -206,7 +239,8 @@ class CPower1200(object):
 		if not 0 <= window <= 7:
 			raise ValueError, "invalid window (must be 0 - 7)"
 		
-		packet = pack('<BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + '\0\0\0'
+		# BIG ENDIAN
+		packet = pack('>BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + '\0\0\0'
 		
 		self._write(packet)
 	
@@ -214,7 +248,8 @@ class CPower1200(object):
 		if not 0 <= window <= 7:
 			raise ValueError, "invalid window (must be 0 - 7)"
 			
-		packet = pack('<BBBBHHHHBBBB',
+		# BIG ENDIAN
+		packet = pack('>BBBBHHHHBBBB',
 			CC_STATIC_TEXT, window,
 			1, # simple text data
 			alignment, x, y, width, height,
@@ -257,7 +292,8 @@ class CPower1200(object):
 		# image.save accepts a file-like object. (undocumented)
 		image.save(ibuf, 'gif')
 		
-		packet = pack('<BBBBHBHH',
+		# This value is big endian
+		packet = pack('>BBBBHBHH',
 			CC_IMAGE, window, 
 			0, # mode 0 == draw
 			speed, stay_time, IMAGE_GIF,
@@ -266,7 +302,7 @@ class CPower1200(object):
 		# FIXME: doesn't work.
 		self._write(packet)
 	
-	def send_clock(self, window, stay_time=5000, calendar=CALENDAR_GREGORIAN, hour_24=True, year_4=True, multiline=True, display_year=True, display_month=True, display_day=True, display_hour=True, display_minute=True, display_second=True, display_week=False, display_pointer=False, font_size=0, red=255, green=255, blue=255, text=''):
+	def send_clock(self, window, stay_time=0, calendar=CALENDAR_GREGORIAN, hour_24=True, year_4=True, multiline=True, display_year=True, display_month=True, display_day=True, display_hour=True, display_minute=True, display_second=True, display_week=False, display_pointer=False, font_size=0, red=255, green=255, blue=255, text=''):
 		# (so many parameters)
 		
 		# pack in the format
@@ -274,6 +310,11 @@ class CPower1200(object):
 		format |= 1 if hour_24 else 0
 		format |= 2 if not year_4 else 0
 		format |= 4 if multiline else 0
+		
+		format |= 8
+		#format |= 16
+		#format |= 32
+		format |= 128
 		
 		# pack the display content
 		content = 0
@@ -293,7 +334,8 @@ class CPower1200(object):
 		if not 0 <= window <= 7:
 			raise ValueError, "invalid window (must be 0 - 7)"
 			
-		packet = pack('<BBHBBBBBBB',
+		# This function call is BIG ENDIAN
+		packet = pack('>BBHBBBBBBB',
 			CC_CLOCK, window, stay_time, calendar,
 			format, content, font_size, red, green, blue) + text + '\0'
 		
@@ -303,11 +345,11 @@ class CPower1200(object):
 	
 	#def show_clock
 	def save(self):
-		packet = pack('<BBH', CC_SAVE, SAVE_SAVE, 0)
+		packet = pack('>BBH', CC_SAVE, SAVE_SAVE, 0)
 		self._write(packet)
 	
 	def reset(self):
-		packet = pack('<BBH', CC_SAVE, SAVE_RESET, 0)
+		packet = pack('>BBH', CC_SAVE, SAVE_RESET, 0)
 		self._write(packet)
 	
 	def exit_show(self):
@@ -326,17 +368,18 @@ if __name__ == '__main__':
 	#s.reset()
 	#s.exit_show()
 	
+	s.set_clock()
 	# define two windows, one at the top and one at the bottom.
-	s.send_window(dict(x=0, y=0, h=8, w=64), dict(x=0, y=8, h=8, w=64))
+	s.send_window(dict(x=0, y=0, h=16, w=64))#, dict(x=0, y=8, h=8, w=64))
 	
 	#s.send_window(1, 0, 8, 64, 8)
 	txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
-	s.send_text(0, txt)
+	#s.send_text(0, txt)
 	#s.send_static_text(0, 'Hello World!')
 	#img = Image.open('test.png')
 	#s.send_image(0, img)
 	
-	s.send_clock(1, calendar=CALENDAR_GREGORIAN, multiline=False)
+	s.send_clock(0, calendar=CALENDAR_GREGORIAN, multiline=True)
 	
 	#s.flush_queue()
 	s.save()

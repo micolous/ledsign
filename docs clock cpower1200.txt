@@ -13,7 +13,7 @@ XX = seconds
 XX = minutes
 XX = hours
 
-XX = day of week, saturday == 6
+XX = day of week, saturday == 6, sunday == 0
 XX = day of month
 XX = month
 XX = year, two digits

@@ -190,7 +190,7 @@ class CPower1200(object):
 			new_clock.second,
 			new_clock.minute,
 			new_clock.hour,
-			new_clock.isoweekday(),
+			new_clock.isoweekday() % 7,
 			new_clock.day,
 			new_clock.month,
 			new_clock.year - 2000,
@@ -369,6 +369,7 @@ if __name__ == '__main__':
 	#s.exit_show()
 	
 	s.set_clock()
+
 	# define two windows, one at the top and one at the bottom.
 	s.send_window(dict(x=0, y=0, h=16, w=64))#, dict(x=0, y=8, h=8, w=64))
 	
@@ -381,6 +382,7 @@ if __name__ == '__main__':
 	
 	s.send_clock(0, calendar=CALENDAR_GREGORIAN, multiline=True)
 	
+	#s.exit_show()
 	#s.flush_queue()
 	s.save()
 	

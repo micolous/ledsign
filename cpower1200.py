@@ -39,6 +39,9 @@ CC_PLAY_SINGLE = 8
 CC_PLAY_DOUBLE = 9
 CC_SET_VARIABLE = 10
 CC_PLAY_SET_VARIABLE = 11
+CC_GLOBAL_DISPLAY_ZONE = 12
+CC_PUSH_SET_VARIABLE = 13
+CC_SET_TIMER = 14
 
 EFFECT_NONE = 0
 EFFECT_OPEN_LEFT = 1
@@ -85,6 +88,66 @@ CALENDAR_LUNAR = 1
 CALENDAR_CHINESE = 2
 CALENDAR_LUNAR_SOLAR = 3
 
+TIMER_INIT = 1
+TIMER_RESET = 2
+TIMER_START = 3
+TIMER_PAUSE = 4
+TIMER_SAVE = 5
+
+ZONE_TEXT = 1
+ZONE_GIF = 2
+ZONE_HINT_TEXT = 6
+ZONE_TIMER = 7
+
+class CPowerZone(object):
+	# all CPowerZones are subclasses of this.
+	
+	def serialise(self):
+		raise NotImplementedException, '.serialise has not been implemented!'
+	
+
+class CPowerTextZone(CPowerZone):
+	
+	def __init__(self, x, y, w, h, start_var, end_var, stay, font_size, font_invert, font_colour, align):
+		self.x = x
+		self.y = y
+		self.w = w
+		self.h = h
+		
+		self.start_var = start_var
+		
+		self.end_var = end_var
+		
+		self.stay = stay
+		
+		self.font_size = font_size
+		self.font_invert = font_invert
+		self.font_colour = font_colour
+		self.align = align
+		self.validate()
+		
+	def validate(self):
+		assert 1 <= self.start_var <= 100, 'start_var out of range 1 .. 100'
+		assert 1 <= self.end_var <= 100, 'end_var out of range 1 .. 100'
+
+	def serialise(self):
+		self.validate()
+		
+		font = 0
+		font |= self.font_size & 0x07
+		font |= 0x08 if self.font_invert else 0
+		font |= (self.font_colour & 0x07) << 4
+		
+		packet = struct.pack('<BHHHHBBHBB', self.x, self.y, self.w, self.h, self.start_var, self.end_var, self.stay, font, align)
+		
+		return packet
+
+		
+class CPowerTimerZone(CPowerZone):
+	def __init__(self, x, y, w, h, font, show_millis):
+		self.x = x
+
+
 class CPower1200(object):
 	"""Implementation of the C-Power 1200 protocol"""
 	
@@ -92,7 +155,7 @@ class CPower1200(object):
 		self.s = serial.Serial(port, 115200)
 		self.file_id = None
 		self.message_open = False
-		print "opening %s" % self.s.portstr
+		#print "opening %s" % self.s.portstr
 		self.queue = bool(queue)
 		self._queued_packets = []
 	
@@ -121,7 +184,7 @@ class CPower1200(object):
 			body += packet_data
 			checksum = self.checksum(body)
 			msg = "\xA5%s\xAE" % self._escape_data(body + checksum)
-			print repr(msg)
+			#print repr(msg)
 			self.s.write(msg)
 			self.s.flush()
 		
@@ -170,9 +233,9 @@ class CPower1200(object):
 		msg = self._escape_data(body + checksum)
 		
 		#print '%r' % msg
-		for c in msg:
-			print '%02x' % ord(c),
-		print ''
+		#for c in msg:
+		#	print '%02x' % ord(c),
+		#print ''
 		self.s.write("\xA5%s\xAE" % (msg,))
 		
 		# before another message can be sent, you need to wait a moment
@@ -341,7 +404,40 @@ class CPower1200(object):
 		
 		self._write(packet)
 			
+	def _set_timer(self, action, property, value, timers=0xFF):
+		packet = pack('>BBBBI', CC_SET_TIMER, timers, action, property, value)
+		self._write(packet)
+	
+	def initialise_timer(self, value=0, countdown=False, run_immediate=True, timers=0xFF):
+		prop = 0
+		prop |= 1 if countdown else 0
+		prop |= 2 if run_immediate else 0
 		
+		# other properties unsupported by this lib, documentation is poor.
+		self._set_timer(TIMER_INIT, prop, value, timers)
+		
+	def reset_timer(self, use_new=False, value=0, run_immediate=True, timers=0xFF):
+		prop = 0
+		prop |= 1 if use_new else 0
+		prop |= 2 if run_immediate else 0
+		
+		if not use_new:
+			# using old value, clear supplied value
+			value = 0
+		
+		self._set_timer(TIMER_RESET, prop, value, timers)
+		
+	def start_timer(self, timers=0xFF):
+		self._set_timer(TIMER_START, 0, 0, timers)
+	
+	def pause_timer(self, timers=0xFF):
+		self._set_timer(TIMER_PAUSE, 0, 0, timers)
+	
+	def save_timer(self, timers=0xFF):
+		self._set_timer(TIMER_SAVE, 0, 0, timers)
+		
+	def global_display_zone(self, zones):
+		pass
 	
 	#def show_clock
 	def save(self):
@@ -374,7 +470,7 @@ if __name__ == '__main__':
 	s.send_window(dict(x=0, y=0, h=16, w=64))#, dict(x=0, y=8, h=8, w=64))
 	
 	#s.send_window(1, 0, 8, 64, 8)
-	txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
+	#txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
 	#s.send_text(0, txt)
 	#s.send_static_text(0, 'Hello World!')
 	#img = Image.open('test.png')

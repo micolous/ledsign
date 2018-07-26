@@ -457,7 +457,7 @@ class CPower1200(object):
 
 if __name__ == '__main__':
 	from sys import argv
-	import Image
+	#import Image
 	
 	s = CPower1200(argv[1])
 	#s.begin_queue()

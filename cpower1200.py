@@ -25,7 +25,7 @@ from datetime import datetime, time
 from struct import pack
 from time import sleep
 from warnings import warn
-from cStringIO import StringIO
+from io import StringIO
 	
 
 CC_DIVISION = 1
@@ -103,7 +103,7 @@ class CPowerZone(object):
 	# all CPowerZones are subclasses of this.
 	
 	def serialise(self):
-		raise NotImplementedException, '.serialise has not been implemented!'
+		raise NotImplementedException('.serialise has not been implemented!')
 	
 
 class CPowerTextZone(CPowerZone):
@@ -165,7 +165,7 @@ class CPower1200(object):
 		
 	def flush_queue(self, unit_id=0xFF, confirmation=False):
 		if not self.queue:
-			raise AttributeError, "Cannot flush queue as it is not running in queue mode!"
+			raise AttributeError("Cannot flush queue as it is not running in queue mode!")
 		
 		# FIXME: Queuing does not work correctly.
 		
@@ -204,10 +204,10 @@ class CPower1200(object):
 		#     sum of each byte from "packet type" to "packet data" content
 		
 		if len(packet_data) > 0xFFFF:
-			raise ValueError, 'Packet too long, packet fragmentation not yet implemented!'
+			raise ValueError('Packet too long, packet fragmentation not yet implemented!')
 		
 		if not (0 <= unit_id <= 255):
-			raise ValueError, 'Unit ID out of range (0 - 255)'
+			raise ValueError('Unit ID out of range (0 - 255)')
 		
 		if self.queue:
 			self._queued_packets.append(packet_data)
@@ -277,11 +277,11 @@ class CPower1200(object):
 	def format_text(self, text='', colour=WHITE, size=0):
 		"Generate formatted text"
 		if not 0x00 < colour < 0x10:
-			raise ValueError, "invalid colour"
+			raise ValueError("invalid colour")
 		
 		if not 0x00 <= size <= 0x0F:
 			# TODO: Implement this as a transition from a pixel font size
-			raise ValueError, "invalid size code"
+			raise ValueError("invalid size code")
 		
 		# colours appear to be as follows:
 		#  bit 1: red
@@ -300,7 +300,7 @@ class CPower1200(object):
 		
 	def send_text(self, window, formatted_text, effect=EFFECT_SCROLL_LEFT, alignment=ALIGN_LEFT, speed=30, stay_time=2):
 		if not 0 <= window <= 7:
-			raise ValueError, "invalid window (must be 0 - 7)"
+			raise ValueError("invalid window (must be 0 - 7)")
 		
 		# BIG ENDIAN
 		packet = pack('>BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + '\0\0\0'
@@ -309,7 +309,7 @@ class CPower1200(object):
 	
 	def send_static_text(self, window, text, x=0, y=0, width=64, height=16, speed=30, stay_time=2, alignment=ALIGN_LEFT, font_size=1, red=0, green=0, blue=0):
 		if not 0 <= window <= 7:
-			raise ValueError, "invalid window (must be 0 - 7)"
+			raise ValueError("invalid window (must be 0 - 7)")
 			
 		# BIG ENDIAN
 		packet = pack('>BBBBHHHHBBBB',
@@ -347,7 +347,7 @@ class CPower1200(object):
 	def send_image(self, window, image, speed=30, stay_time=2, x=0, y=0):
 		"Sends an image to the sign.  Should be a PIL Image object."
 		if not 0 <= window <= 7:
-			raise ValueError, "invalid window (must be 0 - 7)"
+			raise ValueError("invalid window (must be 0 - 7)")
 			
 		ibuf = StringIO()
 		image.convert('I')
@@ -392,10 +392,10 @@ class CPower1200(object):
 		
 		# validate font size
 		if not (0 <= font_size <= 7):
-			raise ValueError, "font size out of range (0 - 7)"
+			raise ValueError("font size out of range (0 - 7)")
 			
 		if not 0 <= window <= 7:
-			raise ValueError, "invalid window (must be 0 - 7)"
+			raise ValueError("invalid window (must be 0 - 7)")
 			
 		# This function call is BIG ENDIAN
 		packet = pack('>BBHBBBBBBB',

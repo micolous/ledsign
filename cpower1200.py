@@ -195,7 +195,7 @@ class CPower1200(object):
 				len(queued_packets) - 1) # total packets - 1
 			body += packet_data
 			checksum = self.checksum(body)
-			msg = "\xA5%s\xAE" % self._escape_data(body + checksum)
+			msg = b"\xA5%s\xAE" % self._escape_data(body + checksum)
 			#print repr(msg)
 			self.s.write(msg)
 			self.s.flush()
@@ -248,7 +248,7 @@ class CPower1200(object):
 		#for c in msg:
 		#	print '%02x' % ord(c),
 		#print ''
-		self.s.write("\xA5%s\xAE" % (msg,))
+		self.s.write(b"\xA5%s\xAE" % (msg,))
 		
 		# before another message can be sent, you need to wait a moment
 		self.s.flush()

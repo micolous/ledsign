@@ -99,6 +99,13 @@ ZONE_GIF = 2
 ZONE_HINT_TEXT = 6
 ZONE_TIMER = 7
 
+class FakeSerial(object):
+	def write(self, data):
+		pass
+	def flush(self):
+		pass
+
+
 class CPowerZone(object):
 	# all CPowerZones are subclasses of this.
 	
@@ -127,8 +134,10 @@ class CPowerTextZone(CPowerZone):
 		self.validate()
 		
 	def validate(self):
-		assert 1 <= self.start_var <= 100, 'start_var out of range 1 .. 100'
-		assert 1 <= self.end_var <= 100, 'end_var out of range 1 .. 100'
+		if self.start_var < 1 or self.start_var > 100:
+			raise ArgumentException('start_var out of range 1 .. 100')
+		if self.end_var < 1 or self.end_var > 100:
+			raise ArgumentException('end_var out of range 1 .. 100')
 
 	def serialise(self):
 		self.validate()
@@ -152,7 +161,10 @@ class CPower1200(object):
 	"""Implementation of the C-Power 1200 protocol"""
 	
 	def __init__(self, port, queue=False):
-		self.s = serial.Serial(port, 115200)
+		if port == '/dev/null':
+			self.s = FakeSerial()
+		else:
+			self.s = serial.Serial(port, 115200)
 		self.file_id = None
 		self.message_open = False
 		#print "opening %s" % self.s.portstr
@@ -264,12 +276,12 @@ class CPower1200(object):
 		
 	
 	def _escape_data(self, input):
-		return input.replace('\xAA', '\xAA\x0A').replace('\xAE', '\xAA\0x0E').replace('\xA5', '\xAA\x05')
+		return input.replace(b'\xAA', b'\xAA\x0A').replace(b'\xAE', b'\xAA\0x0E').replace(b'\xA5', b'\xAA\x05')
 		
 	def checksum(self, input):
 		s = 0
 		for c in input:
-			s += ord(c)
+			s += c
 		
 		s &= 0xFFFF
 		return pack('<H', s)
@@ -290,11 +302,11 @@ class CPower1200(object):
 		
 		# the "colour / size" code has the high 4 bits as the colour,
 		# and the low 4 bits as the size.
-		colour_size = chr( (colour << 4) ^ size )
+		colour_size = bytes( (colour << 4) ^ size )
 		
-		o = ''
+		o = b''
 		for c in text.encode('ascii'):
-			o += colour_size + '\0' + c
+			o += colour_size + b'\0' + bytes(c)
 		
 		return o
 		
@@ -303,7 +315,7 @@ class CPower1200(object):
 			raise ValueError("invalid window (must be 0 - 7)")
 		
 		# BIG ENDIAN
-		packet = pack('>BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + '\0\0\0'
+		packet = pack('>BBBBBH', CC_TEXT, window, effect, alignment, speed, stay_time) + formatted_text + b'\0\0\0'
 		
 		self._write(packet)
 	
@@ -316,7 +328,7 @@ class CPower1200(object):
 			CC_STATIC_TEXT, window,
 			1, # simple text data
 			alignment, x, y, width, height,
-			font_size, red, green, blue) + text + '\0'
+			font_size, red, green, blue) + text.encode('ascii') + b'\0'
 		
 		# TODO: fix this.
 		s._write(packet)
@@ -400,7 +412,7 @@ class CPower1200(object):
 		# This function call is BIG ENDIAN
 		packet = pack('>BBHBBBBBBB',
 			CC_CLOCK, window, stay_time, calendar,
-			format, content, font_size, red, green, blue) + text + '\0'
+			format, content, font_size, red, green, blue) + text.encode('ascii') + b'\0'
 		
 		self._write(packet)
 			

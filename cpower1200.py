@@ -26,7 +26,7 @@ from struct import pack
 from time import sleep
 from warnings import warn
 from io import StringIO
-	
+from base64 import b16encode
 
 CC_DIVISION = 1
 CC_TEXT = 2
@@ -101,7 +101,7 @@ ZONE_TIMER = 7
 
 class FakeSerial(object):
 	def write(self, data):
-		pass
+		print(b16encode(data))
 	def flush(self):
 		pass
 
@@ -295,6 +295,9 @@ class CPower1200(object):
 			# TODO: Implement this as a transition from a pixel font size
 			raise ValueError("invalid size code")
 		
+		if isinstance(text, str):
+			text = text.encode('ascii')
+		
 		# colours appear to be as follows:
 		#  bit 1: red
 		#  bit 2: green (only on green-supporting sign)
@@ -302,11 +305,11 @@ class CPower1200(object):
 		
 		# the "colour / size" code has the high 4 bits as the colour,
 		# and the low 4 bits as the size.
-		colour_size = bytes( (colour << 4) ^ size )
+		colour_size = (colour << 4) ^ size
 		
 		o = b''
-		for c in text.encode('ascii'):
-			o += colour_size + b'\0' + bytes(c)
+		for c in text:
+			o += pack('>BBB', colour_size, 0, c)
 		
 		return o
 		
@@ -482,13 +485,13 @@ if __name__ == '__main__':
 	s.send_window(dict(x=0, y=0, h=16, w=64))#, dict(x=0, y=8, h=8, w=64))
 	
 	#s.send_window(1, 0, 8, 64, 8)
-	#txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
-	#s.send_text(0, txt)
+	txt = s.format_text('Hello', RED, 0) + s.format_text(' World!', GREEN, 0)
+	s.send_text(0, txt)
 	#s.send_static_text(0, 'Hello World!')
 	#img = Image.open('test.png')
 	#s.send_image(0, img)
 	
-	s.send_clock(0, calendar=CALENDAR_GREGORIAN, multiline=True)
+	#s.send_clock(0, calendar=CALENDAR_GREGORIAN, multiline=True)
 	
 	#s.exit_show()
 	#s.flush_queue()

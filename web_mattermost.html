@@ -1,0 +1,94 @@
+<html>
+<head>
+	<title>ledsign</title>
+	<script type="text/javascript">
+		const URL = '/mattermost';
+	</script>
+	<style type="text/css">
+		html, body {
+			border: 0;
+			margin: 0;
+			padding: 0;
+			color: white;
+			background-color: black;
+			font-family: 'Noto Mono', 'Noto Sans', monospace;
+		}
+		
+		#date {
+			position: fixed;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 80%;
+			font-size: 9em;
+			color: #0f0;
+		}
+
+		#clock {
+			position: fixed;
+			right: 0;
+			top: 0;
+			left: 0;
+			bottom: 80%;
+			text-align: right;
+			font-size: 9em;
+			color: #f00;
+		}
+		
+		#marquee {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			top: 20%;
+			font-size: 9em;
+			overflow: hidden;
+		}
+	</style>	
+</head>
+
+<body>
+	<div id="date">Fun 00/00</div>
+	<div id="clock">00:00</div>
+	
+	<div id="marquee">Waiting for server...</div>
+	
+	<script type="text/javascript">
+		var d = document.getElementById('date');
+		var c = document.getElementById('clock');
+		var t = document.getElementById('marquee');
+		const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+		
+		function leadingZero(d, l) {
+			d = '' + d;
+			var i = l - d.length;
+			if (i > 0) {
+				return ('0' * i) + d;
+			} else {
+				return d;
+			}
+		}
+		
+		setInterval(function() {
+			now = new Date();
+			d.innerText = DAYS[now.getDay()] + ' ' +
+				 leadingZero(now.getDate(), 2) + '/' +
+				 leadingZero(now.getMonth(), 2);
+			
+			c.innerText = leadingZero(now.getHours(), 2) + ':' + leadingZero(now.getMinutes(), 2);
+		}, 1000);
+		
+		setInterval(function() {
+			var x = new XMLHttpRequest();
+			x.onreadystatechange = function() {
+				if (x.readyState === XMLHttpRequest.DONE) {
+					t.innerText = x.responseText;
+				}
+			};
+			
+			x.open('GET', URL);
+			x.send();
+		}, 2000);
+	</script>
+</body>
+</html>

@@ -73,7 +73,7 @@
 			now = new Date();
 			d.innerText = DAYS[now.getDay()] + ' ' +
 				 leadingZero(now.getDate(), 2) + '/' +
-				 leadingZero(now.getMonth(), 2);
+				 leadingZero(now.getMonth()+1, 2);
 			
 			c.innerText = leadingZero(now.getHours(), 2) + ':' + leadingZero(now.getMinutes(), 2);
 		}, 1000);

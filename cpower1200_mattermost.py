@@ -30,9 +30,9 @@ class Signbot(object):
             dict(x=0 , y=8, h=8, w=64)  # window 2: bottom: messages
         )
         self._sign.send_clock(0, calendar=CALENDAR_GREGORIAN, multiline=False, display_year=False, display_hour=False, display_minute=False, display_second=False, red=0)
-        self._sign.send_clock(1, calendar=CALENDAR_GREGORIAN, multiline=False, display_year=False, display_month=False, display_day=False, display_second=False, red=0)
+        self._sign.send_clock(1, calendar=CALENDAR_GREGORIAN, multiline=False, display_year=False, display_month=False, display_day=False, display_second=False, green=0)
 
-        self._sign.send_text(2, self._sign.format_text('waiting for messages...', GREEN, 0), speed=15)
+        self._sign.send_text(2, self._sign.format_text('waiting for dank memes...', GREEN, 0), speed=4)
         self._mm.login()
         self._mm.init_websocket(self.on_event)
     
@@ -68,7 +68,7 @@ class Signbot(object):
         print('Message: %s' % displayed_message)
         
         # Now send this to sign
-        self._sign.send_text(2, self._sign.format_text(displayed_message, GREEN, 0), speed=15)
+        self._sign.send_text(2, self._sign.format_text(displayed_message, GREEN, 0), speed=4)
         self._sign.set_clock()
 
 if __name__ == '__main__':
